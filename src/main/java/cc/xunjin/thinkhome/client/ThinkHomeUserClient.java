@@ -1,0 +1,72 @@
+package cc.xunjin.thinkhome.client;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import cc.xunjin.thinkhome.config.GlobalConfig;
+import cc.xunjin.thinkhome.domain.RequestEntityMap;
+import cc.xunjin.thinkhome.domain.ResponseBo;
+import cc.xunjin.thinkhome.domain.user.LoginRequest;
+import cc.xunjin.thinkhome.util.HttpUtil;
+
+/**
+ * Description
+ * <p>
+ * </p>
+ * DATE 2018/7/27.
+ * @author WangBo.
+ */
+public class ThinkHomeUserClient extends ThinkHomeClient {
+
+    private static Logger log = LoggerFactory.getLogger(ThinkHomeUserClient.class);
+
+    /**
+     * 登录API 的 url地址。
+     */
+    private static final String LOGIN_URL = THINKHOME_OPENAPI_URL + "user/login";
+
+
+    public void login() {
+
+        //创建一个 初始化的 requestEntity 实体。
+        RequestEntityMap entity = getRequestEntityMap();
+
+        //创建登录需要的 实体信息。
+        LoginRequest loginRequest = new LoginRequest();
+
+        //设置登录需要的参数
+
+        Map<String, String> authentication = new HashMap<>(2);
+        authentication.put("userAccount", GlobalConfig.getUserAccount());
+        authentication.put("password", GlobalConfig.getLoginPassword());
+
+        Map<String, Object> bodyMap = entity.getBody();
+        bodyMap.put("authentication", authentication);
+
+        entity.setBody(bodyMap);
+
+        //发送请求。
+        ResponseBo responseBo = HttpUtil.executePost(LOGIN_URL, entity);
+
+        if (responseBo.getHttpStatus() == HttpStatus.SC_OK) {
+            String body_string = responseBo.getBody();
+
+            JSONObject body = JSON.parseObject(body_string);
+            String accessToken = body.getString("accessToken");
+
+            GlobalConfig.setAccessToken(accessToken);
+
+            log.info("用户登录成功，获取到 AccessToken：{}", accessToken);
+        } else {
+            log.error("用户登录失败, httpStatus={}, message:{}", responseBo.getHttpStatus(), responseBo.getMsg());
+        }
+    }
+
+}
