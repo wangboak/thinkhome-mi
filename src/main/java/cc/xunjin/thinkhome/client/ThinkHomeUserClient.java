@@ -13,7 +13,6 @@ import java.util.Map;
 import cc.xunjin.thinkhome.config.GlobalConfig;
 import cc.xunjin.thinkhome.domain.RequestEntityMap;
 import cc.xunjin.thinkhome.domain.ResponseBo;
-import cc.xunjin.thinkhome.domain.user.LoginRequest;
 import cc.xunjin.thinkhome.util.HttpUtil;
 
 /**
@@ -38,11 +37,7 @@ public class ThinkHomeUserClient extends ThinkHomeClient {
         //创建一个 初始化的 requestEntity 实体。
         RequestEntityMap entity = getRequestEntityMap();
 
-        //创建登录需要的 实体信息。
-        LoginRequest loginRequest = new LoginRequest();
-
         //设置登录需要的参数
-
         Map<String, String> authentication = new HashMap<>(2);
         authentication.put("userAccount", GlobalConfig.getUserAccount());
         authentication.put("password", GlobalConfig.getLoginPassword());
@@ -50,11 +45,13 @@ public class ThinkHomeUserClient extends ThinkHomeClient {
         Map<String, Object> bodyMap = entity.getBody();
         bodyMap.put("authentication", authentication);
 
+        //需要显示的 setBody 一次，此过程可 签名。
         entity.setBody(bodyMap);
 
-        //发送请求。
+        //发送请求 并获得 服务器响应。
         ResponseBo responseBo = HttpUtil.executePost(LOGIN_URL, entity);
 
+        //判断 http status 是否 200
         if (responseBo.getHttpStatus() == HttpStatus.SC_OK) {
             String body_string = responseBo.getBody();
 
